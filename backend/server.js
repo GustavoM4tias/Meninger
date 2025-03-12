@@ -1,28 +1,46 @@
-const express = require('express');
+// api/server.js
+import express from 'express';
+import dotenv from 'dotenv';
+import cors from 'cors';
+import db from './config/db.js';
+import authRoutes from './routes/authRoutes.js';
+import eventRoutes from './routes/eventRoutes.js';
+import buildingRoutes from './routes/buildingRoutes.js';
+import favoriteRoutes from './routes/favoriteRoutes.js';
+import externalApiRoutes from './routes/externalApiRoutes.js';
+
+
+dotenv.config();
+
 const app = express();
-const cors = require('cors');
-const path = require('path'); // Para trabalhar com caminhos de arquivos
-const authRoutes = require('./routes/auth'); // Rotas de autenticação
-const clientRoutes = require('./routes/clientes'); // Rotas de clientes
-const empreendimentoRoutes = require('./routes/empreendimentos'); // Rotas de empreendimentos
-const eventosRoutes = require('./routes/eventos'); // ajuste o caminho se necessário
+app.use(express.json());
 
-app.use(cors()); // Permitir requisições de outros domínios
-app.use(express.json()); // Para processar JSON
+// Usar CORS
+app.use(cors({
+  origin: ['http://localhost:5173', 'https://meninger.vercel.app'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  credentials: true,
+}));
 
-// Rotas de autenticação
+// Middleware para adicionar `req.db` em cada requisição
+app.use((req, res, next) => {
+  req.db = db;
+  next();
+});
+
+// Rotas
 app.use('/api/auth', authRoutes);
 
-// Rotas de clientes
-app.use('/api/clientes', clientRoutes); // Usar prefixo /clientes
+app.use('/api/events', eventRoutes);
 
-// Rotas de empreendimentos
-app.use('/api/empreendimentos', empreendimentoRoutes); // Usar prefixo /empreendimentos
+app.use('/api/buildings', buildingRoutes);
 
-app.use('/api/eventos', eventosRoutes);
+app.use('/api/favorite', favoriteRoutes);
 
-// Iniciar o servidor
-const PORT = process.env.PORT || 3001;
+// Outras rotas...
+app.use('/api/external', externalApiRoutes);
+
+const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
-    console.log(`Servidor rodando na porta ${PORT}`);
+  console.log(`Servidor rodando na porta: ${PORT}`);
 });
